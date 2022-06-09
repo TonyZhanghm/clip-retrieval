@@ -1,5 +1,7 @@
 """main module combines distributor, runner, reader, mapper, writer to produce clip embeddings"""
 
+import warnings
+warnings.filterwarnings("ignore")
 from braceexpand import braceexpand
 import fire
 from clip_retrieval.clip_inference.load_clip import load_clip
@@ -11,6 +13,7 @@ from clip_retrieval.clip_inference.reader import FilesReader, WebdatasetReader
 from clip_retrieval.clip_inference.writer import NumpyWriter
 from clip_retrieval.clip_inference.distributor import PysparkDistributor, SequentialDistributor
 from clip_retrieval.clip_inference.runner import Runner
+
 
 
 def main(
@@ -27,6 +30,7 @@ def main(
     wds_image_key="jpg",
     wds_caption_key="txt",
     clip_model="ViT-B/32",
+    checkpoint=None,
     mclip_model="sentence-transformers/clip-ViT-B-32-multilingual-v1",
     use_mclip=False,
     use_jit=True,
@@ -68,7 +72,7 @@ def main(
         output_partition_count = int(sample_count / write_batch_size) + 1
 
     def reader_builder(sampler):
-        _, preprocess = load_clip(clip_model=clip_model, use_jit=use_jit)
+        _, preprocess = load_clip(clip_model=clip_model, use_jit=use_jit, checkpoint=checkpoint)
         if input_format == "files":
             return FilesReader(
                 sampler,
@@ -104,6 +108,7 @@ def main(
             enable_metadata=enable_metadata,
             use_mclip=use_mclip,
             clip_model=clip_model,
+            checkpoint=checkpoint,
             use_jit=use_jit,
             mclip_model=mclip_model,
         )
